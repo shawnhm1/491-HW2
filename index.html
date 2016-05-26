@@ -8,7 +8,7 @@
         https://www.youtube.com/watch?v=KApAJhkkqkA ->
 
 
-	<!-- Basic styling, centering the canvas -->
+	<!--Styling, centering the canvas-->
 	<style>
 	canvas {
 		display: block;
@@ -28,13 +28,10 @@
 <body>
 <script>
 /**
- * Scoreboard stuff
- *  _   0
- * |_| 123 <= coresponding indexes, ie. for 1 is 
- * |_| 456    bar 3 and 6 visible => 0 001 001
- * 
+ * ScoreBoard Code 
+
  */
-var NUMS = [
+var NUM = [
 	"1 101 111",
 	"0 001 001",
 	"1 011 110",
@@ -55,10 +52,10 @@ POINTS = [
 	[0, 2, 1, 2],
 	[1, 1, 1, 2]
 ];
-// Convert the strings in NUMS to a boolean array
-for (var i = 0; i < NUMS.length; i++) {
-	var n = NUMS[i].replace(/\s+/g, "");
-	NUMS[i] = (function() {
+// This will convert the strings in NUM to an Array
+for (var i = 0; i < NUM.length; i++) {
+	var n = NUM[i].replace(/\s+/g, "");
+	NUM[i] = (function() {
 		var l = [];
 		for (var j = 0; j < n.length; j++) {
 			l.push(n[j] === "1");
@@ -69,8 +66,8 @@ for (var i = 0; i < NUMS.length; i++) {
 function pad(str, padding, width) {
 	return (new Array(width||2).join(padding||0)+str).slice(-width)
 }
-function drawNumber(n, x, y, ralign) {
-	n = n.toString(); // convert to string => possible to loop thru all digits
+function drawNumber(n, x, y, rightAlign) {
+	n = n.toString(); // convert to string =
 
 	var size = 32,
 		padding = 16;
@@ -80,13 +77,13 @@ function drawNumber(n, x, y, ralign) {
 	ctx.lineCap = "square";
 	ctx.lineWidth = padding/2;
 
-	if (ralign) { // if right aligned move x coord accordingly
+	if (rightAlign) { // if right aligned, than move x coordinance accordingly
 		x -= (n.length*(padding+size)-padding);
 	}
 	ctx.translate(x, y);
 
 	for (var i = 0; i < n.length; i++) {
-		var num = NUMS[parseInt(n[i])];
+		var num = NUM[parseInt(n[i])];
 		
 		ctx.beginPath();
 		for (var j = 0; j < num.length; j++) {
@@ -109,7 +106,7 @@ function drawNumber(n, x, y, ralign) {
 }
 var
 /**
- * Constants
+ * Set constants
  */
 WIDTH  = 700,
 HEIGHT = 600,
@@ -140,17 +137,17 @@ player = {
 	height: 100,
 
 	/**
-	 * Update the position depending on pressed keys
+	 *Update the location of the paddle depending on the buttone presses 
 	 */
 	update: function() {
 		if (keystate[UpArrow]) this.y -= 7;
 		if (keystate[DownArrow]) this.y += 7;
-		// keep the paddle inside of the canvas
+		//Paddle wont be able to go off the screen
 		this.y = Math.max(Math.min(this.y, HEIGHT - this.height), 0);
 	},
 
 	/**
-	 * Draw the player paddle to the canvas
+	 * Drawing the paddle for the player
 	 */
 	draw: function() {
 		ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -158,9 +155,7 @@ player = {
 },
 
 /**
- * The ai paddle
- * 
- * @type {Object}
+ * THE AI PADDLE
  */
 ai = {
 	x: null,
@@ -171,19 +166,19 @@ ai = {
 	height: 100,
 
 	/**
-	 * Update the position depending on the ball position
+	 * Follow the ball and update the paddle
 	 */
 	update: function() {
-		// calculate ideal position
+		// used ot guess the ideal position 
 		var desty = ball.y - (this.height - ball.side)*0.5;
-		// ease the movement towards the ideal position
+		// ease the movment for the paddle 
 		this.y += (desty - this.y) * 0.1;
-		// keep the paddle inside of the canvas
+		// the AI wont be able to run off the screen 
 		this.y = Math.max(Math.min(this.y, HEIGHT - this.height), 0);
 	},
 
 	/**
-	 * Draw the ai paddle to the canvas
+	 * Drawing the AI paddle
 	 */
 	draw: function() {
 		ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -192,25 +187,20 @@ ai = {
 
 /**	
  * The ball object
- * 
- * @type {Object}
  */
 ball = {
 	x:   null,
 	y:   null,
-	vel: null,
+	velocity: null,
 
 	side:  20,
-	speed: 12,
+	speed: 10,
 
 	/**
 	 * Serves the ball towards the specified side
-	 * 
-	 * @param  {number} side 1 right
-	 *                       -1 left
 	 */
 	serve: function(side) {
-		// set the x and y position
+		// SEt the x and y position
 		var r = Math.random();
 		this.x = side===1 ? player.x+player.width : ai.x - this.side;
 		this.y = (HEIGHT - this.side)*r;
@@ -218,7 +208,7 @@ ball = {
 		// steeper angle
 		var phi = 0.1*pi*(1 - 2*r);
 		// set velocity direction and magnitude
-		this.vel = {
+		this.velocity = {
 			x: side*this.speed*Math.cos(phi),
 			y: this.speed*Math.sin(phi)
 		}
@@ -228,44 +218,40 @@ ball = {
 	 * Update the ball position and keep it within the canvas
 	 */
 	update: function() {
-		// update position with current velocity
-		this.x += this.vel.x;
-		this.y += this.vel.y;
-		// check if out of the canvas in the y direction
+		// update position with the updated Velocity
+		this.x += this.velocity.x;
+		this.y += this.velocity.y;
+		// check if out of the canvas with the Y coordination
 		if (0 > this.y || this.y+this.side > HEIGHT) {
-			// calculate and add the right offset, i.e. how far
-			// inside of the canvas the ball is
-			var offset = this.vel.y < 0 ? 0 - this.y : HEIGHT - (this.y+this.side);
+		    // calculate and add the correct offset (how far inside of the canvas the ball is)
+			var offset = this.velocity.y < 0 ? 0 - this.y : HEIGHT - (this.y+this.side);
 			this.y += 2*offset;
 			// mirror the y velocity
-			this.vel.y *= -1;
+			this.velocity.y *= -1;
 		}
-		// helper function to check intesectiont between two
-		// axis aligned bounding boxex (AABB)
+	    // helper function that checks the intersection between two axis aligned bounding boxex 
 		var AABBIntersect = function(ax, ay, aw, ah, bx, by, bw, bh) {
 			return ax < bx+bw && ay < by+bh && bx < ax+aw && by < ay+ah;
 		};
 
-		// check againts target paddle to check collision in x
-		// direction
-		var pdle = this.vel.x < 0 ? player : ai;
-		if (AABBIntersect(pdle.x, pdle.y, pdle.width, pdle.height,
+	    // check againts target paddle to see if a collision in x direction happend
+		var paddle = this.velocity.x < 0 ? player : ai;
+		if (AABBIntersect(paddle.x, paddle.y, paddle.width, paddle.height,
 				this.x, this.y, this.side, this.side)
 		) {	
 			// set the x position and calculate reflection angle
-			this.x = pdle===player ? player.x+player.width : ai.x - this.side;
-			var n = (this.y+this.side - pdle.y)/(pdle.height+this.side);
-			var phi = 0.25*pi*(2*n - 1); // pi/4 = 45
-			// calculate smash value and update velocity
+			this.x = paddle===player ? player.x+player.width : ai.x - this.side;
+			var n = (this.y+this.side - paddle.y)/(paddle.height+this.side);
+			var phi = 0.25*pi*(2*n - 1); 
+			// calculate smash value and change the velocity
 			var smash = Math.abs(phi) > 0.2*pi ? 1.5 : 1;
-			this.vel.x = smash*(pdle===player ? 1 : -1)*this.speed*Math.cos(phi);
-			this.vel.y = smash*this.speed*Math.sin(phi);
+			this.velocity.x = smash*(paddle===player ? 1 : -1)*this.speed*Math.cos(phi);
+			this.velocity.y = smash*this.speed*Math.sin(phi);
 		}
 
-		// reset the ball when ball outside of the canvas in the
-		// x direction
+        // if ball goes outside of the canvas in the x direction, i am going to redraw it in the opisote direction
 		if (0 > this.x+this.side || this.x > WIDTH) {
-			var isplayer = pdle === player;
+			var isplayer = paddle === player;
 			
 			this.serve(isplayer ? 1 : -1);
 			player.score += isplayer ? 0 : 1;
@@ -280,7 +266,7 @@ ball = {
 		ctx.fillRect(this.x, this.y, this.side, this.side);
 	}
 };
-
+    //CODE I FOUND ONLINE TO ALLOW FOR FULL SCREEN 
 function requestFullscreen() {
 	console.log(canvas);
 	if (canvas.requestFullscreen) {
@@ -303,7 +289,7 @@ function requestFullscreen() {
  * Starts the game
  */
 function main() {
-	// create, initiate and append game canvas
+	// create game canvas
 	canvas = document.createElement("canvas");
 	canvas.width = WIDTH;
 	canvas.height = HEIGHT;
@@ -319,7 +305,7 @@ function main() {
 		delete keystate[evt.keyCode];
 	});
 
-	init(); // initiate game objects
+	init(); 
 
 	function touchevt(evt) {
 		var el = evt.target,
@@ -387,26 +373,21 @@ function draw() {
 	player.draw();
 	ai.draw();
 
-	// draw the net
 	var w = 4;
 	var x = (WIDTH - w)*0.5;
 	var y = 0;
-	var step = HEIGHT/20; // how many net segments
+	var step = HEIGHT/20; 
 	while (y < HEIGHT) {
 		ctx.fillRect(x, y+step*0.25, w, step*0.5);
 		y += step;
 	}
-
 	// draw the scores
 	var w2 = WIDTH/2;
 	drawNumber(pad(player.score), w2-20, 20, true);
 	drawNumber(pad(ai.score), w2+20, 20);
 
 	ctx.restore();
-}
-
-    // start and run the game
-    
+}  
 main();
 </script>
 </body>
